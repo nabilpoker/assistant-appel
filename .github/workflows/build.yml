@@ -1,0 +1,21 @@
+name: Fabriquer Damia.exe
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Installer les dépendances
+        run: pip install -r requirements.txt pyinstaller
+      - name: Fabriquer Damia.exe
+        run: pyinstaller --noconfirm --onefile --windowed --name Damia --collect-all webview --add-data "index.html;." --add-data "logo.svg;." launcher.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Damia
+          path: dist/Damia.exe
