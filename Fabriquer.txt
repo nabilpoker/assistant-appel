@@ -1,0 +1,10 @@
+FABRIQUER LE PROGRAMME (une seule fois, sans rien installer sur votre PC)
+
+1. Créez un compte gratuit sur github.com.
+2. Cliquez sur "New repository", nommez-le assistant-appel, cochez "Add a README" puis Create.
+3. Cliquez sur "Add file" > "Upload files", glissez TOUT le contenu du dossier
+   assistant-appel-serveur (y compris le dossier .github), puis "Commit changes".
+4. Ouvrez l'onglet "Actions", choisissez "Fabriquer Damia.exe", puis "Run workflow".
+5. Attendez environ 5 minutes que la case passe au vert.
+6. Cliquez sur la case verte, descendez à "Artifacts", et téléchargez Damia.
+7. Dézippez le fichier : vous obtenez Damia.exe.

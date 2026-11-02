@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Damia</title>
+<style>
+:root{--brand:#106AAF;--dark:#313B44;--orange:#DD5517;--bg:#F4F6FA;--card:#fff;--line:#E2E7EF;--muted:#6B7685;--ok:#1F9D55}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--dark);font-size:14px}
+header{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+header img{height:22px}
+header .t{flex:1;font-weight:600;font-size:14px}
+button,.chip{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--dark);padding:7px 12px}
+button.primary{background:var(--brand);color:#fff;border-color:var(--brand);font-weight:600}
+button.danger{background:var(--orange);color:#fff;border-color:var(--orange);font-weight:600}
+button:disabled{opacity:.5;cursor:default}
+.lang button{padding:4px 9px;font-size:12px;font-weight:600;border-radius:999px;color:var(--muted)}
+.lang button.primary{color:#fff}
+main{padding:12px;display:flex;flex-direction:column;gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+.card h3{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+label.f{display:block;font-size:12px;color:var(--muted);margin:7px 0 3px}
+input,select,textarea{width:100%;font:inherit;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--dark)}
+textarea{resize:vertical}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#bbb;margin-right:6px}
+.dot.on{background:#E53935;animation:p 1.2s infinite}
+@keyframes p{50%{opacity:.3}}
+.tr{max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+.line{background:#F7F9FC;border-radius:10px;padding:7px 10px;line-height:1.45}
+.sugg{border-left:3px solid var(--brand);background:#F7FAFF;border-radius:10px;padding:9px 11px;margin-top:8px;line-height:1.45}
+.alert{border-left:3px solid var(--orange);background:#FFF4EF;border-radius:10px;padding:9px 11px;margin-top:8px;line-height:1.45}
+.banner{background:#FFF9EE;border:1px solid #F3D9A4;color:#7A4B00;border-radius:12px;padding:10px;display:none;line-height:1.4}
+.banner.show{display:block}
+.hidden{display:none!important}
+.muted{color:var(--muted);font-size:12px}
+.tone{background:#F0FAF3;color:#2F5D2F;border-radius:10px;padding:8px 10px;font-size:12.5px;line-height:1.45}
+pre.out{white-space:pre-wrap;background:var(--bg);border-radius:10px;padding:10px;font:inherit;line-height:1.5;margin:4px 0 10px}
+</style>
+</head>
+<body>
+<header>
+  <img src="/logo.svg" alt="SolidCAD">
+  <div class="t" id="appName"></div>
+  <div class="lang"><button data-lang="fr">FR</button><button data-lang="en">EN</button></div>
+  <button id="btnSettings" title="Réglages">⚙</button>
+</header>
+
+<main>
+  <div class="banner" id="banner"></div>
+
+  <section class="card hidden" id="settings">
+    <h3 id="tSet"></h3>
+    <label class="f" id="lKey"></label>
+    <input id="apiKey" type="password" placeholder="sk-...">
+    <div class="row" style="margin-top:8px"><button class="primary" id="btnSaveKey"></button><span class="muted" id="keyState"></span></div>
+  </section>
+
+  <section class="card">
+    <h3 id="tCtx"></h3>
+    <label class="f" id="lType"></label>
+    <select id="ctxType"><option value="cold"></option><option value="follow"></option></select>
+    <label class="f" id="lObj"></label><input id="ctxObj">
+    <label class="f" id="lName"></label><input id="ctxName">
+    <label class="f" id="lRole"></label><input id="ctxRole">
+    <label class="f" id="lWeb"></label><input id="ctxWeb" type="url" placeholder="https://">
+    <label class="f" id="lStep"></label><select id="step"></select>
+    <div class="tone" id="tone" style="margin-top:10px"></div>
+  </section>
+
+  <section class="card">
+    <div class="row">
+      <span class="dot" id="dot"></span><strong id="liveTxt"></strong>
+      <span style="flex:1"></span>
+      <button class="primary" id="btnStart"></button>
+    </div>
+    <h3 id="tTr" style="margin-top:12px"></h3>
+    <div class="tr" id="transcript"></div>
+  </section>
+
+  <section class="card">
+    <h3 id="tRb"></h3>
+    <div id="rebond"></div>
+  </section>
+
+  <section class="card">
+    <h3 id="tNotes"></h3>
+    <textarea id="notes" rows="3"></textarea>
+  </section>
+
+  <section class="card">
+    <div class="row"><button class="danger" id="btnEnd"></button></div>
+    <div id="summaryBox" class="hidden" style="margin-top:10px">
+      <h3 id="tSum"></h3><pre class="out" id="sumOut"></pre>
+      <h3 id="tMail"></h3><pre class="out" id="mailOut"></pre>
+      <button class="chip" id="btnCopy"></button>
+    </div>
+  </section>
+</main>
+
+<script>
+const D = {
+  fr: { appName:"Damia", tSet:"Clé API OpenAI", lKey:"Clé API (enregistrée sur ce PC seulement)", save:"Enregistrer la clé",
+        keyOk:"Clé enregistrée ✓", keyNo:"Aucune clé enregistrée", tCtx:"Contexte de l'appel", lType:"Type d'appel", cold:"Appel à froid", follow:"Suivi",
+        lObj:"Objet de la rencontre", lName:"Nom du contact", lRole:"Rôle", lWeb:"Site web", lStep:"Étape Sandler",
+        tone:"Ton : chaleureux, souriant et respectueux. Objectif : comprendre avant de proposer.",
+        start:"Démarrer l'écoute", stop:"Arrêter l'écoute", listening:"Écoute active", idle:"En pause",
+        tTr:"Transcription en direct", tRb:"Rebond et question", waiting:"En attente de la conversation…",
+        tNotes:"Notes manuelles (secours)", end:"Terminer et résumer", tSum:"Résumé", tMail:"Courriel de suivi (à relire)", copy:"Copier",
+        banner:"Mode dégradé : un service ne répond pas. L'appel continue. Notez dans la zone de secours.",
+        noKey:"Ajoutez votre clé API dans les réglages (⚙) pour activer l'écoute.", micErr:"Micro indisponible : ",
+        err:"Erreur", rebond:"Rebond", question:"Question",
+        steps:["Lien","Cadre","Douleur","Budget","Décision","Solution","Suivi"] },
+  en: { appName:"Damia", tSet:"OpenAI API key", lKey:"API key (saved on this PC only)", save:"Save key",
+        keyOk:"Key saved ✓", keyNo:"No key saved", tCtx:"Call context", lType:"Call type", cold:"Cold call", follow:"Follow-up",
+        lObj:"Meeting objective", lName:"Contact name", lRole:"Role", lWeb:"Website", lStep:"Sandler step",
+        tone:"Tone: warm, smiling and respectful. Goal: understand before proposing.",
+        start:"Start listening", stop:"Stop listening", listening:"Listening", idle:"Paused",
+        tTr:"Live transcript", tRb:"Rebound and question", waiting:"Waiting for the conversation…",
+        tNotes:"Manual notes (backup)", end:"End and summarize", tSum:"Summary", tMail:"Follow-up email (review first)", copy:"Copy",
+        banner:"Degraded mode: a service is not responding. The call continues. Take notes in the backup area.",
+        noKey:"Add your API key in settings (⚙) to enable listening.", micErr:"Microphone unavailable: ",
+        err:"Error", rebond:"Rebound", question:"Question",
+        steps:["Bonding","Contract","Pain","Budget","Decision","Fulfillment","Post-sale"] }
+};
+const IDS = {appName:'appName', tSet:'tSet', lKey:'lKey', btnSaveKey:'save', tCtx:'tCtx', lType:'lType', lObj:'lObj', lName:'lName',
+             lRole:'lRole', lWeb:'lWeb', lStep:'lStep', tone:'tone', tTr:'tTr', tRb:'tRb', tNotes:'tNotes', btnEnd:'end', tSum:'tSum', tMail:'tMail', btnCopy:'copy'};
+
+let lang = 'fr', listening = false, stream = null, seq = 0, lines = [], suggBusy = false, lastLen = 0, keyOk = false;
+const $ = id => document.getElementById(id);
+const L = () => D[lang];
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function ctxData(){
+  return { type: $("ctxType").value, objet: $("ctxObj").value, contact: $("ctxName").value,
+           role: $("ctxRole").value, site: $("ctxWeb").value, langue: lang };
+}
+function stepName(){ return $("step").options[$("step").selectedIndex].text; }
+
+function applyLang(){
+  const d = L();
+  for (const [id, k] of Object.entries(IDS)) $(id).textContent = d[k];
+  $("ctxType").options[0].textContent = d.cold;
+  $("ctxType").options[1].textContent = d.follow;
+  const sel = $("step"), cur = sel.selectedIndex < 0 ? 2 : sel.selectedIndex;
+  sel.innerHTML = d.steps.map((s, i) => `<option value="${i}">${i+1}. ${s}</option>`).join('');
+  sel.selectedIndex = cur;
+  $("banner").textContent = d.banner;
+  $("btnStart").textContent = listening ? d.stop : d.start;
+  $("liveTxt").textContent = listening ? d.listening : d.idle;
+  document.querySelectorAll('.lang button').forEach(b => b.classList.toggle('primary', b.dataset.lang === lang));
+  document.documentElement.lang = lang;
+  renderTranscript();
+}
+
+function setDegraded(on){ $("banner").classList.toggle('show', on); }
+
+function renderTranscript(){
+  const box = $("transcript");
+  box.innerHTML = lines.length
+    ? lines.map(l => `<div class="line"><span class="muted">${l.time.toLocaleTimeString(lang==='fr'?'fr-CA':'en-CA',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}</span><br>${esc(l.text)}</div>`).join('')
+    : `<div class="muted">${L().waiting}</div>`;
+  box.scrollTop = box.scrollHeight;
+}
+
+function showSuggestion(j){
+  const d = L();
+  let h = '';
+  if (j.rebond) h += `<div class="sugg"><strong>${d.rebond} :</strong> ${esc(j.rebond)}</div>`;
+  if (j.question) h += `<div class="sugg"><strong>${d.question} :</strong> ${esc(j.question)}</div>`;
+  if (j.alert) h += `<div class="alert">⚠ ${esc(j.alert)}</div>`;
+  $("rebond").innerHTML = h || `<div class="muted">${d.waiting}</div>`;
+}
+
+async function refreshKey(){
+  try {
+    const r = await fetch('/api/settings');
+    const j = await r.json();
+    keyOk = j.key_loaded;
+    $("keyState").textContent = keyOk ? L().keyOk : L().keyNo;
+    if (!keyOk) $("settings").classList.remove('hidden');
+  } catch (e) { setDegraded(true); }
+}
+
+$("btnSettings").onclick = () => $("settings").classList.toggle('hidden');
+$("btnSaveKey").onclick = async () => {
+  const r = await fetch('/api/settings', {method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({openai_api_key: $("apiKey").value})});
+  const j = await r.json();
+  if (r.ok) { $("apiKey").value = ''; keyOk = true; $("keyState").textContent = L().keyOk; }
+  else { $("keyState").textContent = j.error; }
+};
+
+async function startListening(){
+  if (!keyOk) { alert(L().noKey); $("settings").classList.remove('hidden'); return; }
+  try { stream = await navigator.mediaDevices.getUserMedia({audio: true}); }
+  catch (e) { setDegraded(true); alert(L().micErr + e.message); return; }
+  listening = true;
+  $("dot").classList.add('on');
+  applyLang();
+  recordLoop();
+}
+
+function stopListening(){
+  listening = false;
+  $("dot").classList.remove('on');
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  applyLang();
+}
+
+$("btnStart").onclick = () => listening ? stopListening() : startListening();
+
+// Enregistre des segments de 8 secondes et les envoie à la transcription
+async function recordLoop(){
+  while (listening && stream) {
+    const mime = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '';
+    const rec = new MediaRecorder(stream, mime ? {mimeType: mime} : undefined);
+    const parts = [];
+    rec.ondataavailable = e => { if (e.data && e.data.size) parts.push(e.data); };
+    const stopped = new Promise(r => rec.onstop = r);
+    rec.start();
+    await sleep(8000);
+    if (rec.state !== 'inactive') rec.stop();
+    await stopped;
+    if (!listening) break;
+    const blob = new Blob(parts, {type: mime || 'audio/webm'});
+    if (blob.size > 3000) transcribeSegment(blob, ++seq);
+  }
+}
+
+async function transcribeSegment(blob, n){
+  const fd = new FormData();
+  fd.append('audio', blob, 'segment.webm');
+  try {
+    const r = await fetch('/api/transcribe', {method:'POST', body: fd});
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || 'erreur');
+    setDegraded(false);
+    if (j.text && j.text.trim()) {
+      lines.push({n, text: j.text.trim(), time: new Date()});
+      lines.sort((a, b) => a.n - b.n);
+      renderTranscript();
+      requestSuggestion();
+    }
+  } catch (e) { setDegraded(true); }
+}
+
+async function requestSuggestion(){
+  if (suggBusy) return;
+  const text = lines.map(l => l.text).join(' ');
+  if (text.length < lastLen + 20) return;
+  suggBusy = true;
+  lastLen = text.length;
+  try {
+    const r = await fetch('/api/suggest', {method:'POST', headers:{'Content-Type':'application/json'},
+              body: JSON.stringify({context: ctxData(), step: stepName(), transcript: text.slice(-2000)})});
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || 'erreur');
+    setDegraded(false);
+    showSuggestion(j);
+  } catch (e) { setDegraded(true); }
+  finally { suggBusy = false; }
+}
+
+$("btnEnd").onclick = async () => {
+  if (listening) stopListening();
+  $("summaryBox").classList.remove('hidden');
+  $("sumOut").textContent = '…';
+  $("mailOut").textContent = '…';
+  const text = lines.map(l => l.text).join(' ') + (($("notes").value) ? '\nNotes : ' + $("notes").value : '');
+  try {
+    const r = await fetch('/api/summary', {method:'POST', headers:{'Content-Type':'application/json'},
+              body: JSON.stringify({context: ctxData(), step: stepName(), transcript: text})});
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || 'erreur');
+    $("sumOut").textContent = j.resume;
+    $("mailOut").textContent = j.mail;
+  } catch (e) {
+    $("sumOut").textContent = L().err + ' : ' + e.message;
+    $("mailOut").textContent = '';
+  }
+};
+
+$("btnCopy").onclick = () => { navigator.clipboard && navigator.clipboard.writeText($("mailOut").textContent); };
+
+document.querySelectorAll('.lang button').forEach(b => b.onclick = () => { lang = b.dataset.lang; applyLang(); });
+
+applyLang();
+refreshKey();
+</script>
+</body>
+</html>

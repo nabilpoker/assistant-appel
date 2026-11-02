@@ -1,0 +1,14 @@
+DAMIA - SOLIDCAD
+
+OBTENIR LE PROGRAMME
+Demandez le fichier Damia.exe à votre équipe TI, ou fabriquez-le
+une fois via GitHub (voir le guide Fabriquer.txt).
+
+UTILISER LE PROGRAMME
+1. Double-cliquez sur Damia.exe.
+2. Cliquez sur le bouton ⚙ en haut, collez votre clé API OpenAI, puis Enregistrer.
+3. Remplissez le contexte de l'appel.
+4. Cliquez sur Démarrer l'écoute et parlez.
+5. À la fin, cliquez sur Terminer et résumer.
+
+Votre clé reste sur votre PC. Ne la partagez avec personne.
